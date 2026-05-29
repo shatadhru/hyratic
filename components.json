@@ -1,6 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "radix-nova",
+  "style": "radix-rhea",
   "rsc": true,
   "tsx": true,
   "tailwind": {
@@ -22,8 +22,6 @@
   "menuColor": "default",
   "menuAccent": "subtle",
   "registries": {
-        "@efferd": "https://efferd.com/r/{style}/{name}.json"
-
-    
+    "@efferd": "https://efferd.com/r/{style}/{name}.json"
   }
 }

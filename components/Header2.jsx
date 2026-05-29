@@ -30,8 +30,7 @@ function Header2() {
 						</span>
 					))}
 				</div>
-
-				<ScrollBar orientation="horizontal" />
+				<ScrollBar draggable orientation="horizontal" className="hidden" />
 			</ScrollArea>
 		</div>
 	);
