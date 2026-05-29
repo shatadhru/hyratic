@@ -27,7 +27,9 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 
 /* ---------- Password Field ---------- */
-function PasswordField({ id, label, visible, onToggle }) {
+function PasswordField(props = {}) {
+  const { id, label, visible, onToggle } = props;
+
   return (
     <Field>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
@@ -55,7 +57,9 @@ function PasswordField({ id, label, visible, onToggle }) {
 }
 
 /* ---------- Signup Form ---------- */
-export function SignupForm({ className }) {
+export function SignupForm(props = {}) {
+  const className = props.className || "";
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -63,14 +67,13 @@ export function SignupForm({ className }) {
 
   const { data: session, isLoading } = authClient.useSession();
 
-  /* ---------- AUTO REDIRECT IF LOGGED IN ---------- */
+  /* ---------- AUTO REDIRECT ---------- */
   useEffect(() => {
     if (!isLoading && session) {
       window.location.replace("/hyratic/dashboard");
     }
   }, [session, isLoading]);
 
-  /* ---------- SESSION LOADING SCREEN ---------- */
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-60">
@@ -134,7 +137,7 @@ export function SignupForm({ className }) {
   return (
     <div className={cn("flex flex-col gap-6 relative", className)}>
 
-      {/* 🎉 SUCCESS OVERLAY */}
+      {/* SUCCESS OVERLAY */}
       {isSuccessful && (
         <>
           <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center text-white flex-col">

@@ -25,13 +25,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 
-export function LoginForm({ className, ...props }) {
+export function LoginForm(props = {}) {
+  const className = props.className || "";
+
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const { data: session, isLoading } = authClient.useSession();
 
-  /* ---------- AUTO REDIRECT IF LOGGED IN ---------- */
   useEffect(() => {
     if (!isLoading && session) {
       router.replace("/hyratic/dashboard");
@@ -60,7 +61,6 @@ export function LoginForm({ className, ...props }) {
           onSuccess: () => {
             router.replace("/hyratic/dashboard");
           },
-
           onError: (ctx) => {
             alert(ctx.error.message);
           },

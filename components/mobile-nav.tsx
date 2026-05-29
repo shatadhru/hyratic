@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 /* ---------- Avatar Dropdown (SELF-CONTAINED) ---------- */
-function AvatarDropdown({ user }) {
+function AvatarDropdown({ user } : any) {
   const initials = user?.name?.slice(0, 2).toUpperCase() || "U";
 
   const logout = async () => {
