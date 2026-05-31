@@ -17,7 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import { SignupForm } from "./signup-form";
+import  SignupForm  from "./signup-form";
 import { LoginForm } from "./login-form";
 import { Spinner } from "@/components/ui/spinner";
 

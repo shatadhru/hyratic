@@ -1,244 +1,356 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Eye, EyeOff } from "lucide-react";
-import Confetti from "react-confetti-boom";
+import { useState } from "react"
+import Confetti from "react-confetti-boom"
 
-import { authClient } from "@/lib/auth-client";
-import { cn } from "@/lib/utils";
+import { authClient } from "@/lib/auth-client"
 
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
+
 import {
   Card,
-  CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+  CardDescription,
+} from "@/components/ui/card"
 
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { CheckCircle2 } from "lucide-react"
 
-import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
+function SignupForm() {
+  const [tab, setTab] = useState("account")
+  const [loading, setLoading] = useState(false)
+  const [isSuccessful, setIsSuccessful] = useState(false)
 
-/* ---------- Password Field ---------- */
-function PasswordField(props = {}) {
-  const { id, label, visible, onToggle } = props;
+  const [checkingUsername, setCheckingUsername] =
+    useState(false)
+  const [usernameAvailable, setUsernameAvailable] =
+    useState(null)
 
-  return (
-    <Field>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    username: "",
+    role: "",
+  })
 
-      <div className="relative">
-        <Input
-          id={id}
-          name={id}
-          type={visible ? "text" : "password"}
-          minLength={8}
-          required
-          className="pr-10"
-        />
+  const roles = [
+    {
+      id: "freelancer",
+      title: "Freelancer",
+      description: "Offer your services and earn money.",
+    },
+    {
+      id: "client",
+      title: "Client",
+      description: "Hire professionals for your projects.",
+    },
+    {
+      id: "both",
+      title: "Both",
+      description: "Work and hire at the same time.",
+    },
+  ]
 
-        <button
-          type="button"
-          onClick={onToggle}
-          className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
-        >
-          {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-        </button>
-      </div>
-    </Field>
-  );
-}
+  // -----------------------------
+  // STEP 1 VALIDATION
+  // -----------------------------
+  const handleAccountStep = () => {
+    if (!formData.name.trim()) return alert("Name required")
+    if (!formData.email.trim()) return alert("Email required")
 
-/* ---------- Signup Form ---------- */
-export function SignupForm(props = {}) {
-  const className = props.className || "";
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [isSuccessful, setIsSuccessful] = useState(false);
-
-  const { data: session, isLoading } = authClient.useSession();
-
-  /* ---------- AUTO REDIRECT ---------- */
-  useEffect(() => {
-    if (!isLoading && session) {
-      window.location.replace("/hyratic/dashboard");
+    if (formData.password.length < 8) {
+      return alert("Password must be 8+ characters")
     }
-  }, [session, isLoading]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-60">
-        <Spinner />
-      </div>
-    );
+    if (
+      formData.password !== formData.confirmPassword
+    ) {
+      return alert("Passwords do not match")
+    }
+
+    setTab("username")
   }
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.currentTarget);
-
-    const name = formData.get("name");
-    const email = formData.get("email");
-    const password = formData.get("password");
-    const confirmPassword = formData.get("confirm-password");
-
-    if (password.length < 8) {
-      alert("Password must be at least 8 characters long");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
+  // -----------------------------
+  // USERNAME CHECK
+  // -----------------------------
+  const checkUsername = async () => {
+    if (formData.username.length < 3) return
 
     try {
-      setLoading(true);
+      setCheckingUsername(true)
+
+      const { data } =
+        await authClient.isUsernameAvailable({
+          username: formData.username,
+        })
+
+      setUsernameAvailable(data?.available)
+    } catch {
+      setUsernameAvailable(false)
+    } finally {
+      setCheckingUsername(false)
+    }
+  }
+
+  // -----------------------------
+  // FINAL SIGNUP
+  // -----------------------------
+  const handleCreateAccount = async () => {
+    if (!formData.role)
+      return alert("Select a role")
+
+    try {
+      setLoading(true)
 
       await authClient.signUp.email(
         {
-          name,
-          email,
-          password,
-          callbackURL: "/hyratic/dashboard",
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          username: formData.username,
+          role: formData.role,
+          callbackURL: "/dashboard",
         },
         {
           onSuccess: () => {
-            setIsSuccessful(true);
+            setIsSuccessful(true)
 
             setTimeout(() => {
-              window.location.replace("/hyratic/dashboard");
-            }, 1500);
+              window.location.href = "/dashboard"
+            }, 1500)
           },
-
           onError: (ctx) => {
-            alert(ctx.error.message);
+            alert(ctx.error.message)
           },
         }
-      );
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong");
+      )
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
+  // -----------------------------
+  // UI
+  // -----------------------------
   return (
-    <div className={cn("flex flex-col gap-6 relative", className)}>
+    <div className="mx-auto max-w-md space-y-6 p-4">
 
-      {/* SUCCESS OVERLAY */}
-      {isSuccessful && (
-        <>
-          <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center text-white flex-col">
-            <h1 className="text-2xl font-bold">🎉 Account Created!</h1>
-            <p className="text-sm opacity-80 mt-2 flex items-center gap-2">
-              <Spinner /> Redirecting...
+      <h1 className="text-2xl font-bold text-center">
+        Create Account
+      </h1>
+
+      <Tabs value={tab} className="w-full">
+
+        {/* PROGRESS */}
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="account" disabled>
+            Account
+          </TabsTrigger>
+          <TabsTrigger value="username" disabled>
+            Username
+          </TabsTrigger>
+          <TabsTrigger value="role" disabled>
+            Role
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ---------------- STEP 1 ---------------- */}
+        <TabsContent value="account" className="space-y-3">
+
+          <Input
+            placeholder="Full name"
+            value={formData.name}
+            onChange={(e) =>
+              setFormData((p) => ({
+                ...p,
+                name: e.target.value,
+              }))
+            }
+          />
+
+          <Input
+            placeholder="Email"
+            type="email"
+            value={formData.email}
+            onChange={(e) =>
+              setFormData((p) => ({
+                ...p,
+                email: e.target.value,
+              }))
+            }
+          />
+
+          <Input
+            placeholder="Password"
+            type="password"
+            value={formData.password}
+            onChange={(e) =>
+              setFormData((p) => ({
+                ...p,
+                password: e.target.value,
+              }))
+            }
+          />
+
+          <Input
+            placeholder="Confirm password"
+            type="password"
+            value={formData.confirmPassword}
+            onChange={(e) =>
+              setFormData((p) => ({
+                ...p,
+                confirmPassword: e.target.value,
+              }))
+            }
+          />
+
+          <Button
+            className="w-full"
+            onClick={handleAccountStep}
+          >
+            Continue
+          </Button>
+
+        </TabsContent>
+
+        {/* ---------------- STEP 2 ---------------- */}
+        <TabsContent value="username" className="space-y-3">
+
+          <Input
+            placeholder="Username"
+            value={formData.username}
+            onBlur={checkUsername}
+            onChange={(e) =>
+              setFormData((p) => ({
+                ...p,
+                username: e.target.value,
+              }))
+            }
+          />
+
+          {checkingUsername && (
+            <p className="text-sm text-muted-foreground">
+              Checking username...
             </p>
+          )}
+
+          {usernameAvailable === true && (
+            <p className="text-sm text-green-500">
+              Username available
+            </p>
+          )}
+
+          {usernameAvailable === false && (
+            <p className="text-sm text-red-500">
+              Username already taken
+            </p>
+          )}
+
+          <div className="flex gap-2">
+
+            <Button
+              variant="outline"
+              onClick={() => setTab("account")}
+            >
+              Back
+            </Button>
+
+            <Button
+              className="flex-1"
+              disabled={!usernameAvailable}
+              onClick={() => setTab("role")}
+            >
+              Continue
+            </Button>
+
           </div>
 
-          <div className="fixed inset-0 z-[60] pointer-events-none">
-            <Confetti
-              mode="boom"
-              particleCount={150}
-              colors={["#ff577f", "#ff884b", "#4ade80", "#60a5fa"]}
-            />
+        </TabsContent>
+
+        {/* ---------------- STEP 3 ---------------- */}
+        <TabsContent value="role" className="space-y-3">
+
+          {roles.map((role) => (
+            <Card
+              key={role.id}
+              onClick={() =>
+                setFormData((p) => ({
+                  ...p,
+                  role: role.id,
+                }))
+              }
+              className={`cursor-pointer transition border ${
+                formData.role === role.id
+                  ? "border-primary"
+                  : ""
+              }`}
+            >
+              <CardHeader>
+                <CardTitle>{role.title}</CardTitle>
+                <CardDescription>
+                  {role.description}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          ))}
+
+          <div className="flex gap-2">
+
+            <Button
+              variant="outline"
+              onClick={() => setTab("username")}
+            >
+              Back
+            </Button>
+
+            <Button
+              className="flex-1"
+              disabled={loading}
+              onClick={handleCreateAccount}
+            >
+              {loading
+                ? "Creating..."
+                : "Create Account"}
+            </Button>
+
           </div>
-        </>
+
+        </TabsContent>
+
+      </Tabs>
+
+      {/* ---------------- SUCCESS ---------------- */}
+      {isSuccessful && (
+        <div className="text-center space-y-3 pt-6">
+
+          <Confetti mode="boom" />
+
+          <CheckCircle2 className="mx-auto h-12 w-12 text-green-500" />
+
+          <h2 className="text-xl font-semibold">
+            Account Created!
+          </h2>
+
+          <p className="text-muted-foreground">
+            Redirecting to dashboard...
+          </p>
+
+        </div>
       )}
 
-      {/* FORM */}
-      <Card className={isSuccessful ? "opacity-40 pointer-events-none" : ""}>
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Create your account</CardTitle>
-          <CardDescription>
-            Enter your information below to create your account.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <form onSubmit={onSubmit}>
-            <FieldGroup>
-
-              <Field>
-                <FieldLabel htmlFor="name">Full Name</FieldLabel>
-                <Input id="name" name="name" required placeholder="John Doe" />
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  placeholder="m@example.com"
-                />
-              </Field>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <PasswordField
-                  id="password"
-                  label="Password"
-                  visible={showPassword}
-                  onToggle={() => setShowPassword((p) => !p)}
-                />
-
-                <PasswordField
-                  id="confirm-password"
-                  label="Confirm Password"
-                  visible={showConfirmPassword}
-                  onToggle={() => setShowConfirmPassword((p) => !p)}
-                />
-              </div>
-
-              <FieldDescription>
-                Password must be at least 8 characters long.
-              </FieldDescription>
-
-              <Button
-                type="submit"
-                disabled={loading || isSuccessful}
-                className="w-full flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Spinner /> Creating Account...
-                  </>
-                ) : (
-                  "Create Account"
-                )}
-              </Button>
-
-              <FieldDescription className="text-center mt-2">
-                Already have an account?{" "}
-                <a href="/auth/login" className="underline hover:text-primary">
-                  Sign in
-                </a>
-              </FieldDescription>
-
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* FOOTER */}
-      <FieldDescription className="text-center px-6">
-        By continuing you agree to our{" "}
-        <a href="/terms" className="underline">Terms</a> and{" "}
-        <a href="/privacy" className="underline">Privacy Policy</a>.
-      </FieldDescription>
-
     </div>
-  );
+  )
 }
+
+
+export default SignupForm 

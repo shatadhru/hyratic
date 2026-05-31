@@ -1,7 +1,7 @@
 "use client"
 
 import { Logo } from "@/components/logo"
-import { SignupForm } from "@/components/signup-form"
+import  SignupForm  from "@/components/signup-form"
 import { GalleryVerticalEndIcon } from "lucide-react"
 
 export default function SignupPage() {
